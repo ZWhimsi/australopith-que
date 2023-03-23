@@ -82,7 +82,7 @@ def record_on_detect(file_name, silence_limit=1 , silence_threshold=2500, chunk=
     wf.writeframes(b''.join(list(prev_audio)))
     wf.writeframes(b''.join(frames))
     wf.close()
-    
+
 def whisper():
     result1=model.transcribe('C:/Users/Mathis/Desktop/CODEV/example.wav',language="french")
     return result1['text']
@@ -107,7 +107,7 @@ def lucie():
                     t4 = threading.Timer(210,longbip,[1])
                     t4.start()
                     break_v=True
-                    break 
+                    break
             if break_v==True:
                 break
                 if levenshtein(txt[i:j],'jaguarstop')<=2:
@@ -116,7 +116,7 @@ def lucie():
                     t3.cancel()
                     t4.cancel()
                     break_v=True
-                    break 
+                    break
             if break_v==True:
                 break
                 if levenshtein(txt[i:j],'jaguarstart')<=2:
@@ -129,7 +129,7 @@ def lucie():
                     t8 = threading.Timer(210-round(temps_ecoule),longbip,[2])
                     t8.start()
                     break_v=True
-                    break 
+                    break
             if break_v==True:
                 break
                 if levenshtein(txt[i:j],'jaguarminutes')<=3:
@@ -137,10 +137,10 @@ def lucie():
                     for elt in txt:
                         if elt in ['1','2','3','4','5','6','7','8','9']:
                             tps+=elt
-                    t9 = threading.Timer(tps.int()*60,t2s,['Temps écoulé',5])
+                    t9 = threading.Timer(int(tps)*60,t2s,['Temps écoulé',5])
                     t9.start()
                     break_v=True
-                    break 
+                    break
             if break_v==True:
                 break
         print(time.time()-ok)
