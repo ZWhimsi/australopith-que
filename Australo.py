@@ -27,63 +27,64 @@ from playsound import playsound
 
 print(torch.cuda.is_available())
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-model=whisper.load_model("medium",device=DEVICE)
+model=whisper.load_model("small",device=DEVICE)
 ##
-def record_on_detect(file_name, silence_limit=1, silence_threshold=2500, chunk=1024, rate=44100, prev_audio=1):
-  CHANNELS = 1
-  FORMAT = pyaudio.paInt16
-
-  p = pyaudio.PyAudio()
-  stream = p.open(format=p.get_format_from_width(2),
+def record_on_detect(file_name, silence_limit=1 , silence_threshold=2500, chunk=1024, rate=44100, prev_audio=1):
+    CHANNELS = 1
+    FORMAT = pyaudio.paInt16
+    end=1
+    current=0
+    p = pyaudio.PyAudio()
+    stream = p.open(format=p.get_format_from_width(2),
                   channels=CHANNELS,
                   rate=rate,
                   input=True,
                   output=False,
                   frames_per_buffer=chunk)
 
-  listen = True
-  started = False
-  rel = rate/chunk
-  frames = []
+    listen = True
+    started = False
+    rel = rate/chunk
+    frames = []
 
-  prev_audio = deque(maxlen=int(prev_audio * rel))
-  slid_window = deque(maxlen=int(silence_limit * rel))
+    prev_audio = deque(maxlen=int(prev_audio * rel))
+    slid_window = deque(maxlen=int(silence_limit * rel))
 
-  while listen:
-    data = stream.read(chunk)
-    slid_window.append(math.sqrt(abs(audioop.avg(data, 4))))
+    while listen:
+        data = stream.read(chunk)
+        slid_window.append(math.sqrt(abs(audioop.avg(data, 4))))
+        if(sum([x > silence_threshold for x in slid_window]) > 0) and current<=end:
+            if(not started):
+                current=time.time()
+                end=time.time()+3
+                started = True
+        elif (started is True):
+            started = False
+            listen = False
+            prev_audio = deque(maxlen=int(0.5 * rel))
+        if (started is True):
+            current=time.time()
+            frames.append(data)
+        else:
+            prev_audio.append(data)
 
-    if(sum([x > silence_threshold for x in slid_window]) > 0):
-      if(not started):
-        print("Starting record of phrase")
-        started = True
-    elif (started is True):
-      started = False
-      listen = False
-      prev_audio = deque(maxlen=int(0.5 * rel))
+    stream.stop_stream()
+    stream.close()
 
-    if (started is True):
-      frames.append(data)
-    else:
-      prev_audio.append(data)
-
-  stream.stop_stream()
-  stream.close()
-
-  p.terminate()
+    p.terminate()
 
 
-  wf = wave.open('C:/Users/Mathis/Desktop/CODEV/'f'{file_name}.wav', 'wb')
-  wf.setnchannels(CHANNELS)
-  wf.setsampwidth(p.get_sample_size(FORMAT))
-  wf.setframerate(rate)
+    wf = wave.open('C:/Users/Mathis/Desktop/CODEV/'f'{file_name}.wav', 'wb')
+    wf.setnchannels(CHANNELS)
+    wf.setsampwidth(p.get_sample_size(FORMAT))
+    wf.setframerate(rate)
 
-  wf.writeframes(b''.join(list(prev_audio)))
-  wf.writeframes(b''.join(frames))
-  wf.close()
-
+    wf.writeframes(b''.join(list(prev_audio)))
+    wf.writeframes(b''.join(frames))
+    wf.close()
+    
 def whisper():
-    result1=model.transcribe('C:/Users/Mathis/Desktop/CODEV/example.wav')
+    result1=model.transcribe('C:/Users/Mathis/Desktop/CODEV/example.wav',language="french")
     return result1['text']
 
 def lucie():
@@ -91,38 +92,58 @@ def lucie():
         record_on_detect('example')
         txt=whisper()
         print(txt)
-        if levenshtein(txt,'lucieblitz')<=2:
-            t1 = threading.Timer(0,t2s,['Blitz enclenché',1])
-            t1.start()
-            temps_demarrage=time.time()
-            t2 = threading.Timer(150,bip,[1])
-            t2.start()
-            t3 = threading.Timer(180,t2s,['fin du temps',2])
-            t3.start()
-            t4 = threading.Timer(210,longbip,[1])
-            t4.start()
-        if levenshtein(txt,'luciestop')<=2:
-            temps_ecoule=temps_demarrage-time.time()
-            t2.cancel()
-            t3.cancel()
-            t4.cancel()
-        if levenshtein(txt,'luciestart')<=2:
-            t5 = threading.Timer(0,t2s,['Blitz enclenché',3])
-            t5.start()
-            t6 = threading.Timer(150-round(temps_ecoule),bip[2])
-            t6.start()
-            t7 = threading.Timer(180-round(temps_ecoule),t2s,['fin du temps',4])
-            t7.start()
-            t8 = threading.Timer(210-round(temps_ecoule),longbip,[2])
-            t8.start()
-        if levenshtein(txt,'lucieminutes')<=3:
-            tps=''
-            for elt in txt:
-                if elt in ['1','2','3','4','5','6','7','8','9']:
-                    tps+=elt
-            t9 = threading.Timer(tps.int()*60,t2s,['Temps écoulé',5])
-            t9.start()
-
+        break_v=False
+        ok=time.time()
+        for i in range(len(txt)):
+            for j in range(len(txt)):
+                if levenshtein(txt[i:j],'jaguarblitz')<=2:
+                    t1 = threading.Timer(0,t2s,['Blitz enclenché',1])
+                    t1.start()
+                    temps_demarrage=time.time()
+                    t2 = threading.Timer(150,bip,[1])
+                    t2.start()
+                    t3 = threading.Timer(180,t2s,['fin du temps',2])
+                    t3.start()
+                    t4 = threading.Timer(210,longbip,[1])
+                    t4.start()
+                    break_v=True
+                    break 
+            if break_v==True:
+                break
+                if levenshtein(txt[i:j],'jaguarstop')<=2:
+                    temps_ecoule=temps_demarrage-time.time()
+                    t2.cancel()
+                    t3.cancel()
+                    t4.cancel()
+                    break_v=True
+                    break 
+            if break_v==True:
+                break
+                if levenshtein(txt[i:j],'jaguarstart')<=2:
+                    t5 = threading.Timer(0,t2s,['Blitz enclenché',3])
+                    t5.start()
+                    t6 = threading.Timer(150-round(temps_ecoule),bip[2])
+                    t6.start()
+                    t7 = threading.Timer(180-round(temps_ecoule),t2s,['fin du temps',4])
+                    t7.start()
+                    t8 = threading.Timer(210-round(temps_ecoule),longbip,[2])
+                    t8.start()
+                    break_v=True
+                    break 
+            if break_v==True:
+                break
+                if levenshtein(txt[i:j],'jaguarminutes')<=3:
+                    tps=''
+                    for elt in txt:
+                        if elt in ['1','2','3','4','5','6','7','8','9']:
+                            tps+=elt
+                    t9 = threading.Timer(tps.int()*60,t2s,['Temps écoulé',5])
+                    t9.start()
+                    break_v=True
+                    break 
+            if break_v==True:
+                break
+        print(time.time()-ok)
 
 
 
@@ -154,11 +175,11 @@ def levenshtein(chaine1i, chaine2i):
 
 def t2s(txt,num):
     tts = gtts.gTTS(txt,lang='fr')
-    tts.save('C:/Users/Mathis/Desktop/CODEV/textetospeech'+str(num)+'.mp3')
-    playsound('C:/Users/Mathis/Desktop/CODEV/textetospeech'+str(num)+'.mp3')
+    tts.save('C://Users//Mathis/Desktop//CODEV/textetospeech'+str(num)+'.mp3')
+    playsound('C://Users//Mathis//Desktop//CODEV/textetospeech'+str(num)+'.mp3')
 
 def bip(num):
-    playsound('C:/Users//Mathis//Desktop/CODEV/petitbip'+str(num)+'.mp3')
+    playsound('C://Users//Mathis//Desktop//CODEV/petitbip'+str(num)+'.mp3')
 
 def longbip(num):
-    playsound('C:/Users/Mathis/Desktop/CODEV/longbip'+str(num)+'.mp3')
+    playsound('C://Users//Mathis//Desktop//CODEV/longbip'+str(num)+'.mp3')
