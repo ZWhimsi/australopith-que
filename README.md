@@ -1,2 +1,2 @@
-# australopith-que
+# lucie
 Voice assistant using SPEECHBRAIN
