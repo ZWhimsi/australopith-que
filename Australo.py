@@ -1,5 +1,5 @@
-# brew install portaudio
-# pip install pyaudio
+#Import des différents modules nécesaires
+
 import time
 import torch
 import sys
@@ -20,7 +20,8 @@ from speechbrain.pretrained import EncoderDecoderASR
 
 asr_model = EncoderDecoderASR.from_hparams(source="speechbrain/asr-crdnn-commonvoice-fr", savedir="pretrained_models/asr-crdnn-commonvoice-fr", run_opts={"device":"cuda"} )
 
-
+# Détecte la parole et enregiste un fichier .wav de 1 sec
+# silence limit : temps de silence qui force l'arrêt en seconde, silence_threshold: seuil de detection de la parole, prev_audio: temps d'enregistrement avant la detection du seuil (pour ne pas couper le premier mot)
 def record_on_detect(file_name, silence_limit=0.5 , silence_threshold=2500, chunk=1024, rate=44100, prev_audio=0.8):
     CHANNELS = 1
     FORMAT = pyaudio.paInt16
@@ -49,6 +50,7 @@ def record_on_detect(file_name, silence_limit=0.5 , silence_threshold=2500, chun
             if(not started):
                 print("sound detected")
                 current=time.time()
+                #Temps du fichier modifiable
                 end=time.time()+ 1
                 started = True
         elif (started is True):
@@ -76,26 +78,32 @@ def record_on_detect(file_name, silence_limit=0.5 , silence_threshold=2500, chun
     wf.writeframes(b''.join(frames))
     wf.close()
 
-def lucie(): 
+
+# Fonction à exécuter pour tester le script
+def lucie():
     while True:
         record_on_detect('test')
+        #Affichage de la prédiction du moidèle
         print(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'))
         if 2 >= levenshtein(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'),'lucie'):
+            #Exécute la fonction t2s après 0 sec
             t1 = threading.Timer(0,t2s,['Blitz enclenché',1])
             t1.start()
             temps_demarrage=time.time()
+            #Exécute la fonction bip après 150 sec
             t2 = threading.Timer(150,bip,[1])
             t2.start()
             t3 = threading.Timer(180,t2s,['fin du temps',2])
             t3.start()
             t4 = threading.Timer(210,longbip,[1])
             t4.start()
-           
 
+
+# Calcul de distance entre chaîne de caractères
 def levenshtein(chaine1i, chaine2i):
     chaine1 = ''.join(char for char in chaine1i if char.isalnum()).lower()
     chaine2 = ''.join(char for char in chaine2i if char.isalnum()).lower()
-    print(chaine1,chaine2)
+    # print(chaine1,chaine2) affichage possible pour voir ce que le modèle déduit
     taille_chaine1 = len(chaine1) + 1
     taille_chaine2 = len(chaine2) + 1
     levenshtein_matrix = np.zeros ((taille_chaine1, taille_chaine2))
@@ -119,7 +127,7 @@ def levenshtein(chaine1i, chaine2i):
                 )
     return (levenshtein_matrix[taille_chaine1 - 1, taille_chaine2 - 1])
 
-
+# Utilise le google text to speech pour renvoyer du son
 def t2s(txt,num):
     tts = gtts.gTTS(txt,lang='fr')
     tts.save('C://Users//Mathis/Desktop//CODEV/textetospeech'+str(num)+'.mp3')
