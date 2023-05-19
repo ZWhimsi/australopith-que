@@ -1,6 +1,5 @@
 # brew install portaudio
 # pip install pyaudio
-import whisper
 import time
 import torch
 import sys
@@ -13,23 +12,16 @@ import numpy as np
 import threading
 import gtts
 from playsound import playsound
-# Silence limit in
-# only silence is recorded. When this time passes the
-# recording finishes and the file is delivered.
+import soundfile
+import torchaudio
+from pydub import AudioSegment
+from pydub.playback import play
+from speechbrain.pretrained import EncoderDecoderASR
 
-# The silence threshold intensity that defines silence
-# and noise signal (an int. lower than THRESHOLD is silence).
+asr_model = EncoderDecoderASR.from_hparams(source="speechbrain/asr-crdnn-commonvoice-fr", savedir="pretrained_models/asr-crdnn-commonvoice-fr", run_opts={"device":"cuda"} )
 
-# Previous audio (in seconds) to prepend. When noise
-# is detected, how much of previously recorded audio is
-# prepended. This helps to prevent chopping the beggining
-# of the phrase.
 
-print(torch.cuda.is_available())
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-model=whisper.load_model("small",device=DEVICE)
-##
-def record_on_detect(file_name, silence_limit=1 , silence_threshold=2500, chunk=1024, rate=44100, prev_audio=1):
+def record_on_detect(file_name, silence_limit=0.5 , silence_threshold=2500, chunk=1024, rate=44100, prev_audio=0.8):
     CHANNELS = 1
     FORMAT = pyaudio.paInt16
     end=1
@@ -55,8 +47,9 @@ def record_on_detect(file_name, silence_limit=1 , silence_threshold=2500, chunk=
         slid_window.append(math.sqrt(abs(audioop.avg(data, 4))))
         if(sum([x > silence_threshold for x in slid_window]) > 0) and current<=end:
             if(not started):
+                print("sound detected")
                 current=time.time()
-                end=time.time()+3
+                end=time.time()+ 1
                 started = True
         elif (started is True):
             started = False
@@ -83,73 +76,26 @@ def record_on_detect(file_name, silence_limit=1 , silence_threshold=2500, chunk=
     wf.writeframes(b''.join(frames))
     wf.close()
 
-def whisper():
-    result1=model.transcribe('C:/Users/Mathis/Desktop/CODEV/example.wav',language="french")
-    return result1['text']
-
-def lucie():
+def lucie(): 
     while True:
-        record_on_detect('example')
-        txt=whisper()
-        print(txt)
-        break_v=False
-        ok=time.time()
-        for i in range(len(txt)):
-            for j in range(len(txt)):
-                if levenshtein(txt[i:j],'jaguarblitz')<=2:
-                    t1 = threading.Timer(0,t2s,['Blitz enclenché',1])
-                    t1.start()
-                    temps_demarrage=time.time()
-                    t2 = threading.Timer(150,bip,[1])
-                    t2.start()
-                    t3 = threading.Timer(180,t2s,['fin du temps',2])
-                    t3.start()
-                    t4 = threading.Timer(210,longbip,[1])
-                    t4.start()
-                    break_v=True
-                    break
-            if break_v==True:
-                break
-                if levenshtein(txt[i:j],'jaguarstop')<=2:
-                    temps_ecoule=temps_demarrage-time.time()
-                    t2.cancel()
-                    t3.cancel()
-                    t4.cancel()
-                    break_v=True
-                    break
-            if break_v==True:
-                break
-                if levenshtein(txt[i:j],'jaguarstart')<=2:
-                    t5 = threading.Timer(0,t2s,['Blitz enclenché',3])
-                    t5.start()
-                    t6 = threading.Timer(150-round(temps_ecoule),bip[2])
-                    t6.start()
-                    t7 = threading.Timer(180-round(temps_ecoule),t2s,['fin du temps',4])
-                    t7.start()
-                    t8 = threading.Timer(210-round(temps_ecoule),longbip,[2])
-                    t8.start()
-                    break_v=True
-                    break
-            if break_v==True:
-                break
-                if levenshtein(txt[i:j],'jaguarminutes')<=3:
-                    tps=''
-                    for elt in txt:
-                        if elt in ['1','2','3','4','5','6','7','8','9']:
-                            tps+=elt
-                    t9 = threading.Timer(int(tps)*60,t2s,['Temps écoulé',5])
-                    t9.start()
-                    break_v=True
-                    break
-            if break_v==True:
-                break
-        print(time.time()-ok)
-
-
+        record_on_detect('test')
+        print(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'))
+        if 2 >= levenshtein(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'),'lucie'):
+            t1 = threading.Timer(0,t2s,['Blitz enclenché',1])
+            t1.start()
+            temps_demarrage=time.time()
+            t2 = threading.Timer(150,bip,[1])
+            t2.start()
+            t3 = threading.Timer(180,t2s,['fin du temps',2])
+            t3.start()
+            t4 = threading.Timer(210,longbip,[1])
+            t4.start()
+           
 
 def levenshtein(chaine1i, chaine2i):
     chaine1 = ''.join(char for char in chaine1i if char.isalnum()).lower()
     chaine2 = ''.join(char for char in chaine2i if char.isalnum()).lower()
+    print(chaine1,chaine2)
     taille_chaine1 = len(chaine1) + 1
     taille_chaine2 = len(chaine2) + 1
     levenshtein_matrix = np.zeros ((taille_chaine1, taille_chaine2))
@@ -172,6 +118,7 @@ def levenshtein(chaine1i, chaine2i):
                     levenshtein_matrix[x,y-1] + 1
                 )
     return (levenshtein_matrix[taille_chaine1 - 1, taille_chaine2 - 1])
+
 
 def t2s(txt,num):
     tts = gtts.gTTS(txt,lang='fr')
