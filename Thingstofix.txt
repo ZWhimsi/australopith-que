@@ -1,4 +1,0 @@
-Lorsque Jaguar est en fin de phrase
-Augmentée la fluidité
-Bip pas toujours cohérent
-Problème d'accès aux fichiers (car déjà ouvert)
