@@ -1,2 +1,2 @@
 # australopith-que
-Voice assistant using whisper from OpenAI
+Voice assistant using SPEECHBRAIN
