@@ -210,7 +210,7 @@ def levenshtein(chaine1, chaine2):
 def delete_audio_files():
     base_path = 'C://Users//Mathis/Desktop//CODEV/'
     num = 1  # Numéro initial
-    
+    os.remove('C:/Users/Mathis/Desktop/CODEV/question.wav')
     while True:
         file_path = base_path + 'textetospeech' + str(num) + '.mp3'
         if os.path.exists(file_path):
