@@ -25,9 +25,9 @@ from pathvalidate.argparse import validate_filename_arg, validate_filepath_arg
 
 parser = ArgumentParser()
 parser.add_argument("--filepath", type=validate_filepath_arg)
-
+parser.add_argument("--apikey", type=validate_filepath_arg)
 ## à modifier 
-openai.api_key = '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'
+openai.api_key = arser.parse_args().apikey
 chemin= parser.parse_args().filepath
 print(chemin)
 ## Load des modèles
