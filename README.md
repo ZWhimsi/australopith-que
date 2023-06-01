@@ -1,5 +1,5 @@
 # Lucie
-Voice assistant using SPEECHBRAIN
+Voice assistant using SPEECHBRAIN, WHISPER, GOOGLETTS
 
 ## Command-line
 ## Command-line usage
