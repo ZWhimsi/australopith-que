@@ -11,14 +11,14 @@ La commande suivante vous permettra de lancer le script:
 ## Tutoriel
 Dites Lucie pour appeler l'assistant après cela plusieurs choix s'offrent à vous, vous pouvez dire les mots clés suivants:
 
-# Blague
+### Blague
  Retourne une blague aléatoire
 
-# Question
+### Question
  Posez votre question à chatgpt et écoutez sa réponse
 
-# Eclair
+### Eclair
 Enclenche un timer de 2min30 3min et 3min30
 
-# Annuler
+### Annuler
  Vous permet d'annuler une des actions suivantes en prononçant son nom : éclair , question
