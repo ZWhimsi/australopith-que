@@ -20,11 +20,20 @@ from speechbrain.pretrained import EncoderDecoderASR
 import psutil
 import whisper
 import openai
+from argparse import ArgumentParser
+from pathvalidate.argparse import validate_filename_arg, validate_filepath_arg
 
+parser = ArgumentParser()
+parser.add_argument("--filepath", type=validate_filepath_arg)
+
+## à modifier 
 openai.api_key = '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'
+chemin= parser.parse_args().filepath
+print(chemin)
+## Load des modèles
 whisper_model = whisper.load_model("medium")
-
 asr_model = EncoderDecoderASR.from_hparams(source="speechbrain/asr-crdnn-commonvoice-fr", savedir="pretrained_models/asr-crdnn-commonvoice-fr", run_opts={"device":"cuda"} )
+
 
 # Détecte la parole et enregiste un fichier .wav de 1 sec
 # silence limit : temps de silence qui force l'arrêt en seconde, silence_threshold: seuil de detection de la parole, prev_audio: temps d'enregistrement avant la detection du seuil (pour ne pas couper le premier mot)
@@ -75,7 +84,7 @@ def record_on_detect(file_name, silence_limit=0.5 , silence_threshold=2000, chun
     p.terminate()
 
 
-    wf = wave.open('C:/Users/Mathis/Desktop/CODEV/'f'{file_name}.wav', 'wb')
+    wf = wave.open(f'{chemin}'f'{file_name}.wav','wb')
     wf.setnchannels(CHANNELS)
     wf.setsampwidth(p.get_sample_size(FORMAT))
     wf.setframerate(rate)
@@ -84,21 +93,21 @@ def record_on_detect(file_name, silence_limit=0.5 , silence_threshold=2000, chun
     wf.writeframes(b''.join(frames))
     wf.close()
 
-
+#Bot qui gère les interactions
 def lucie(interactions=0):
     while True:
         record_on_detect('test')
         #Affichage de la prédiction du modèle
-        print(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'))
-        if 2 >= levenshtein(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'),'lucie'):
+        print(asr_model.transcribe_file(chemin+'test.wav'))
+        if 2 >= levenshtein(asr_model.transcribe_file(chemin+'test.wav'),'lucie'):
             interactions+=1
             t1 = threading.Timer(0,t2s,['Lucie est à vôtre écoute',interactions])
             t1.start()
             t1.cancel()
             while True:
                 record_on_detect('test')
-                print(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'))
-                if 2 >= levenshtein(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'),'eclair'):
+                print(asr_model.transcribe_file(chemin+'test.wav'))
+                if 2 >= levenshtein(asr_model.transcribe_file(chemin+'test.wav'),'eclair'):
                     interactions+=1
                     t2 = threading.Timer(0,t2s,['Blitz enclenché',interactions])
                     t2.start()
@@ -112,15 +121,15 @@ def lucie(interactions=0):
                     t5.start()
                     break
              
-                if 2 >= levenshtein(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'),'annuler'):
+                if 2 >= levenshtein(asr_model.transcribe_file(chemin+'test.wav'),'annuler'):
                     interactions+=1
                     t6 = threading.Timer(0,t2s,['Que voulez vous annuler',interactions])
                     t6.start()
                     t6.cancel()
                     while True:
                         record_on_detect('test')
-                        print(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'))
-                        if 3 >= levenshtein(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'),'eclair'):
+                        print(asr_model.transcribe_file(chemin+'test.wav'))
+                        if 3 >= levenshtein(asr_model.transcribe_file(chemin+'test.wav'),'eclair'):
                             interactions+=1
                             t7 = threading.Timer(0,t2s,['Blitz annulé',interactions])
                             t7.start()
@@ -130,7 +139,7 @@ def lucie(interactions=0):
                             t5.cancel()
                             break
                    
-                        if 3 >= levenshtein(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'),'question'):
+                        if 3 >= levenshtein(asr_model.transcribe_file(chemin+'test.wav'),'question'):
                             interactions+=1
                             t7 = threading.Timer(0,t2s,['Question annulé',interactions])
                             t7.start()
@@ -139,14 +148,14 @@ def lucie(interactions=0):
                             break
                     break
               
-                if 2 >= levenshtein(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'),'question'):
+                if 2 >= levenshtein(asr_model.transcribe_file(chemin+'test.wav'),'question'):
                     interactions+=1
                     t8 = threading.Timer(0,t2s,['Posez votre question',interactions])
                     t8.start()
                     t8.cancel()
                     while True:
                         record_on_detect('question',prev_audio=2, duree=10,silence_limit=1,silence_threshold=2500 )
-                        question=whisper_model.transcribe('C:/Users/Mathis/Desktop/CODEV/question.wav')
+                        question=whisper_model.transcribe(chemin+'question.wav')
                         print(question['text'])
                         result=question_chatgpt(question['text'])
                         interactions+=1
@@ -156,7 +165,7 @@ def lucie(interactions=0):
                         break
                     break
                
-                if 2 >= levenshtein(asr_model.transcribe_file('C:/Users/Mathis/Desktop/CODEV/test.wav'),'blague'):
+                if 2 >= levenshtein(asr_model.transcribe_file(chemin+'test.wav'),'blague'):
                     result=question_chatgpt('Donne moi une excellente blague')
                     interactions+=1
                     t9 = threading.Timer(0,t2s,[result,interactions])
@@ -165,7 +174,7 @@ def lucie(interactions=0):
                     break
                  
                  
-                 
+# Utilisation de l'api de chatgpt               
 def question_chatgpt(question):
     response = openai.Completion.create(
         engine='text-davinci-003',
@@ -208,9 +217,9 @@ def levenshtein(chaine1, chaine2):
 
 # Supprime les fichiers audios créé lors de la dernière utilisation 
 def delete_audio_files():
-    base_path = 'C://Users//Mathis/Desktop//CODEV/'
+    base_path = '/home/someone/Desktop/lucie/'
     num = 1  # Numéro initial
-    os.remove('C:/Users/Mathis/Desktop/CODEV/question.wav')
+    #os.remove('C:/Users/Mathis/Desktop/CODEV/question.wav')
     while True:
         file_path = base_path + 'textetospeech' + str(num) + '.mp3'
         if os.path.exists(file_path):
@@ -225,14 +234,14 @@ def delete_audio_files():
 # Utilise le google text to speech pour renvoyer du son
 def t2s(txt,num):
     tts = gtts.gTTS(txt,lang='fr')
-    tts.save('C://Users//Mathis/Desktop//CODEV/textetospeech'+str(num)+'.mp3')
-    playsound('C://Users//Mathis//Desktop//CODEV/textetospeech'+str(num)+'.mp3')
+    tts.save('/home/someone/Desktop/lucie/textetospeech'+str(num)+'.mp3')
+    playsound('/home/someone/Desktop/lucie/textetospeech'+str(num)+'.mp3')
 
 def bip():
-    playsound('C://Users//Mathis//Desktop//CODEV/petitbip.mp3')
+    playsound('/home/someone/Desktop/lucie/petitbip.mp3')
 
 def longbip():
-    playsound('C://Users//Mathis//Desktop//CODEV/longbip.mp3')
+    playsound('/home/someone/Desktop/lucie/longbip.mp3')
 
 # Fonction à exécuter pour tester le script    
 def main():
@@ -240,5 +249,4 @@ def main():
     lucie()
     
 
-    
 main()
