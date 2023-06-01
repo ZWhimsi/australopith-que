@@ -2,7 +2,6 @@
 Voice assistant using SPEECHBRAIN, WHISPER, GOOGLETTS
 
 ## Command-line
-## Command-line usage
 
 La commande suivante vous permettra de lancer le script:
 
